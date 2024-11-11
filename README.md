@@ -4,13 +4,13 @@ Zadanie: Meteostanica
 ## Cieľ projektu: 
 Návrh a implementácia zariadenia na meranie aktuálnych meteorologických podmienok a zobrazovanie predpovede počasia. Údaje sú získavané pomocou senzorov LPS25HB a HTS221 a výsledné údaje sú zobrazované na TFT dispeji.
 
-Použité časti hardware:
-•	Mikrokontrolér STM32
-•	Senzory LPS25HB a HTS221
-•	Dotykový TFT displej (2.8 , 240x320) – ILI 9341
-•	SD karta
-•	Protoboard
-•	Počítač
+** Použité časti hardware: **
+- Mikrokontrolér STM32
+- Senzory LPS25HB a HTS221
+- Dotykový TFT displej (2.8 , 240x320) – ILI 9341
+- SD karta
+- Protoboard
+- Počítač
 
 ### 1. Meranie a spracovanie údajov (Sensor Specialist)
 Úloha: 
