@@ -1,7 +1,7 @@
 # Meteostanica
 Zadanie: Meteostanica
 
-Cieľ projektu: 
+## Cieľ projektu: 
 Návrh a implementácia zariadenia na meranie aktuálnych meteorologických podmienok a zobrazovanie predpovede počasia. Údaje sú získavané pomocou senzorov LPS25HB a HTS221 a výsledné údaje sú zobrazované na TFT dispeji.
 
 Použité časti hardware:
@@ -12,7 +12,7 @@ Použité časti hardware:
 •	Protoboard
 •	Počítač
 
-1. Meranie a spracovanie údajov (Sensor Specialist) 
+### 1. Meranie a spracovanie údajov (Sensor Specialist)
 Úloha: 
 Zabezpečiť správne pripojenie senzorov teplota, tlak, vlhkosť k STM32, načítavanie údajov zo senzorov a ich spracovanie.
 Konkrétne úlohy:
@@ -24,7 +24,7 @@ Výstup: Kód na čítanie údajov zo senzorov a prepočet na predpoveď počasi
 
 Vypracovateľka : Klaudia Piwková
 
-2. Zobrazenie údajov na TFT displeji (UI Designer)
+### 2. Zobrazenie údajov na TFT displeji (UI Designer)
 Úloha: 
 Zabezpečiť zobrazenie údajov o počasí na TFT displeji. Zabezpečiť interakciu s používateľom.
 Konkrétne úlohy:
@@ -36,7 +36,7 @@ Výstup: Kód na zobrazovanie údajov a interakciu s displejom.
 
 Vypracovateľka : Zuzana Kittnerová
 
-3. Systém súborov a ukladanie údajov (File System Manager)
+### 3. Systém súborov a ukladanie údajov (File System Manager)
 Úloha: 
 Implementovať FATFS na prístup k SD karte a ukladanie nameraných údajov do CSV súboru.
 Konkrétne úlohy:
@@ -48,7 +48,7 @@ Výstup: Kód na zapisovanie nameraných údajov na SD kartu v CSV formáte.
 
 Vypracovateľka : Angelika Loduhová
 
-4. Integrácia a testovanie (System Integrator and Tester)
+### 4. Integrácia a testovanie (System Integrator and Tester)
 Úloha:
 Zabezpečiť, aby všetky časti projektu spolupracovali a celý systém bol stabilný.// hlavne čo sa týka testovania projektu 
 Konkrétne úlohy:
