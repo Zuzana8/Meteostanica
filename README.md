@@ -20,8 +20,7 @@ Pripojenie senzorov k STM32 a ich konfigurácia I2C, LPS25HB a HTS221
 Naprogramovanie načítania a kalibrácie údajov zo senzorov.
 Prepojenie senzorových údajov s algoritmom na výpočet základnej predpovede počasia na základe tlaku, vlhkosti a teploty.
 
-Výstup: Kód na čítanie údajov zo senzorov a prepočet na predpoveď počasia.
-
+Výstup: Kód na čítanie údajov zo senzorov a prepočet na predpoveď počasia.<br/>
 Vypracovateľka : Klaudia Piwková
 
 ### 2. Zobrazenie údajov na TFT displeji (UI Designer)
@@ -32,8 +31,7 @@ Práca s ILI ovládačom na komunikáciu s TFT displejom.
 Navrhnúť rozloženie obrazovky, aby zobrazovala všetky potrebné informácie ako aktuálna teplota, vlhkosť, tlak, predpoveď.
 Implementácia dotykových funkcií na prehliadanie histórie alebo obnovenie údajov.
 
-Výstup: Kód na zobrazovanie údajov a interakciu s displejom.
-
+Výstup: Kód na zobrazovanie údajov a interakciu s displejom.<br/>
 Vypracovateľka : Zuzana Kittnerová
 
 ### 3. Systém súborov a ukladanie údajov (File System Manager)
@@ -44,8 +42,7 @@ Pripojenie SD karty k STM32 a konfigurácia FATFS pre prístup k súborom.
 Implementácia funkcie na zápis údajov do CSV formátu napr. čas + údaje v hex formáte // možné zmeniť 
 Overenie správneho formátovania a zabezpečenie, aby bol súbor prístupný  pre uživateľa 
 
-Výstup: Kód na zapisovanie nameraných údajov na SD kartu v CSV formáte.
-
+Výstup: Kód na zapisovanie nameraných údajov na SD kartu v CSV formáte.<br/>
 Vypracovateľka : Angelika Loduhová
 
 ### 4. Integrácia a testovanie (System Integrator and Tester)
@@ -56,6 +53,5 @@ Spojiť kód z jednotlivých častí senzorov, displej, SD karta a zabezpečiť 
 Riešiť problémy s pamäťou, časovaním a ladením celého systému.
 Vytvoriť testovacie scenáre pre overenie správnosti ukladania a zobrazovania údajov.
 
-Výstup: Finálny integrovaný systém s dokumentáciou o testovaní a riešených problémoch.
-
- Vypracovateľka : Dorottya Szarka 
+Výstup: Finálny integrovaný systém s dokumentáciou o testovaní a riešených problémoch.<br/>
+Vypracovateľka : Dorottya Szarka 
