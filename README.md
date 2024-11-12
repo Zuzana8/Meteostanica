@@ -9,7 +9,7 @@ Návrh a implementácia zariadenia na meranie aktuálnych meteorologických podm
 - Senzory LPS25HB a HTS221
 - TFT displej (2.8 , 240x320) – ILI 9341
 - SD karta
-- Protoboard
+- Breadboard
 - Počítač
 
 ### 1. Meranie a spracovanie údajov (Sensor Specialist)
