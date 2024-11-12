@@ -7,7 +7,7 @@ Návrh a implementácia zariadenia na meranie aktuálnych meteorologických podm
 **Použité časti hardware:**
 - Mikrokontrolér STM32
 - Senzory LPS25HB a HTS221
-- Dotykový TFT displej (2.8 , 240x320) – ILI 9341
+- TFT displej (2.8 , 240x320) – ILI 9341
 - SD karta
 - Protoboard
 - Počítač
