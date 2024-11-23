@@ -60,7 +60,9 @@ static void MX_SPI1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+float temperature = 0;
+float humidity = 0;
+float pressure = 0;
 /* USER CODE END 0 */
 
 /**
@@ -97,6 +99,10 @@ int main(void)
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
+  //initialize sensors
+  HTS221_init();
+  LPS25HB_init();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -104,6 +110,10 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+		 // get values from sensors - for testing
+		 temperature = hts221_get_temperature();
+		 humidity = hts221_get_humidity();
+		 pressure = lps25hb_get_pressure();
 
     /* USER CODE BEGIN 3 */
   }
