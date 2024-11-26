@@ -44,6 +44,9 @@ float hts221_get_temperature() {
 	uint8_t t0_x8 = hts221_read_byte(T0_degC_x8);
 	uint8_t t1_x8 = hts221_read_byte(T1_degC_x8);
 
+	//float T0_degC = (float) (t0_x8 | ((msb & 0b11) << 8)) / 8.0;
+	//float T1_degC = (float) (t1_x8 | ((msb & 0b1100) << 6)) / 8.0;
+
 	float T0_degC = (float) (t0_x8+(1 << 6)*(msb & 0x03))/8.0;
 	float T1_degC = (float) (t1_x8+(1 << 6)*(msb & 0x0C))/8.0;
 
