@@ -25,6 +25,11 @@
 #include "lps25hb.h"
 #include "hts221.h"
 #include "i2c.h"
+#include "spi.h"
+#include "Adafruit_GFX.h"
+#include "fonts.h"
+#include "gpio.h"
+#include "ILI9341.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,17 +49,19 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-SPI_HandleTypeDef hspi1;
+//SPI_HandleTypeDef hspi1;
+DMA_HandleTypeDef hdma_spi1_tx;
 
 /* USER CODE BEGIN PV */
-
+uint8_t TX_Buffer [] = "A" ; // DATA to send
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
+//static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 //static void MX_I2C1_Init(void);
-static void MX_SPI1_Init(void);
+//static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -95,14 +102,25 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
   MX_SPI1_Init();
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
-
+  	HAL_SPI_Transmit_IT(&hspi1, TX_Buffer, 1); //Sending in Interrupt mode
+    HAL_Delay(100);
   //initialize sensors
-  HTS221_init();
-  LPS25HB_init();
+  //HTS221_init();
+  //LPS25HB_init();
+
+  GFX_Init(); // Inicializácia Adafruit GFX
+
+  GFX_SetCursor(10, 10);
+  GFX_SetTextColor(COLOR_WHITE);
+  GFX_Print("Hello, World!");
+
+  /* USER CODE BEGIN 2 */
+  ILI9341_Init(); // Inicializácia ILI9341 displeja
 
   /* USER CODE END 2 */
 
@@ -111,9 +129,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  temperature = hts221_get_temperature();
-	  humidity = hts221_get_humidity();
-	  pressure = lps25hb_get_pressure();
+	  ILI9341_FillScreen(COLOR_GREEN);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -162,44 +178,116 @@ void SystemClock_Config(void)
   }
 }
 
-
 /**
-  * @brief SPI1 Initialization Function
+  * @brief I2C1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_SPI1_Init(void)
+//static void MX_I2C1_Init(void)
+//{
+//
+//  /* USER CODE BEGIN I2C1_Init 0 */
+////
+//  /* USER CODE END I2C1_Init 0 */
+//
+//  LL_I2C_InitTypeDef I2C_InitStruct = {0};
+//
+//  LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+//
+//  LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+//  /**I2C1 GPIO Configuration
+//  PB6   ------> I2C1_SCL
+//  PB7   ------> I2C1_SDA
+//  */
+//  GPIO_InitStruct.Pin = LL_GPIO_PIN_6|LL_GPIO_PIN_7;
+//  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+//  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+//  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+//  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+//  GPIO_InitStruct.Alternate = LL_GPIO_AF_4;
+//  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//
+//  /* Peripheral clock enable */
+//  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C1);
+//
+//  /* USER CODE BEGIN I2C1_Init 1 */
+////
+//  /* USER CODE END I2C1_Init 1 */
+//
+//  /** I2C Initialization
+//  */
+//  LL_I2C_EnableAutoEndMode(I2C1);
+//  LL_I2C_DisableOwnAddress2(I2C1);
+//  LL_I2C_DisableGeneralCall(I2C1);
+//  LL_I2C_EnableClockStretching(I2C1);
+//  I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
+//  I2C_InitStruct.Timing = 0x00201D2B;
+//  I2C_InitStruct.AnalogFilter = LL_I2C_ANALOGFILTER_ENABLE;
+//  I2C_InitStruct.DigitalFilter = 0;
+//  I2C_InitStruct.OwnAddress1 = 0;
+//  I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
+//  I2C_InitStruct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
+//  LL_I2C_Init(I2C1, &I2C_InitStruct);
+//  LL_I2C_SetOwnAddress2(I2C1, 0, LL_I2C_OWNADDRESS2_NOMASK);
+//  /* USER CODE BEGIN I2C1_Init 2 */
+////
+//  /* USER CODE END I2C1_Init 2 */
+//
+//}
+//
+///**
+//  * @brief SPI1 Initialization Function
+//  * @param None
+//  * @retval None
+//  */
+//static void MX_SPI1_Init(void)
+//{
+//
+//  /* USER CODE BEGIN SPI1_Init 0 */
+////
+//  /* USER CODE END SPI1_Init 0 */
+//
+//  /* USER CODE BEGIN SPI1_Init 1 */
+////
+//  /* USER CODE END SPI1_Init 1 */
+//  /* SPI1 parameter configuration*/
+//  hspi1.Instance = SPI1;
+//  hspi1.Init.Mode = SPI_MODE_MASTER;
+//  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+//  hspi1.Init.DataSize = SPI_DATASIZE_4BIT;
+//  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+//  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+//  hspi1.Init.NSS = SPI_NSS_SOFT;
+//  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+//  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+//  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+//  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+//  hspi1.Init.CRCPolynomial = 7;
+//  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+//  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+//  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+//  /* USER CODE BEGIN SPI1_Init 2 */
+////
+//  /* USER CODE END SPI1_Init 2 */
+//
+//}
+//
+///**
+//  * Enable DMA controller clock
+//  */
+static void MX_DMA_Init(void)
 {
 
-  /* USER CODE BEGIN SPI1_Init 0 */
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
 
-  /* USER CODE END SPI1_Init 0 */
-
-  /* USER CODE BEGIN SPI1_Init 1 */
-
-  /* USER CODE END SPI1_Init 1 */
-  /* SPI1 parameter configuration*/
-  hspi1.Instance = SPI1;
-  hspi1.Init.Mode = SPI_MODE_MASTER;
-  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_4BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi1.Init.CRCPolynomial = 7;
-  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
-  if (HAL_SPI_Init(&hspi1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN SPI1_Init 2 */
-
-  /* USER CODE END SPI1_Init 2 */
+  /* DMA interrupt init */
+  /* DMA1_Channel3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
 
 }
 
@@ -208,36 +296,36 @@ static void MX_SPI1_Init(void)
   * @param None
   * @retval None
   */
-static void MX_GPIO_Init(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOF_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, DISPLAY_CS_Pin|SD_CS_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : Button___ext__interrupt_Pin */
-  GPIO_InitStruct.Pin = Button___ext__interrupt_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(Button___ext__interrupt_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : DISPLAY_CS_Pin SD_CS_Pin */
-  GPIO_InitStruct.Pin = DISPLAY_CS_Pin|SD_CS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
-}
+//static void MX_GPIO_Init(void)
+//{
+//  GPIO_InitTypeDef GPIO_InitStruct = {0};
+///* USER CODE BEGIN MX_GPIO_Init_1 */
+///* USER CODE END MX_GPIO_Init_1 */
+//
+//  /* GPIO Ports Clock Enable */
+//  __HAL_RCC_GPIOF_CLK_ENABLE();
+//  __HAL_RCC_GPIOA_CLK_ENABLE();
+//  __HAL_RCC_GPIOB_CLK_ENABLE();
+//
+//  /*Configure GPIO pin Output Level */
+//  HAL_GPIO_WritePin(GPIOA, DISPLAY_CS_Pin|SD_CS_Pin, GPIO_PIN_RESET);
+//
+//  /*Configure GPIO pin : Button___ext__interrupt_Pin */
+//  GPIO_InitStruct.Pin = Button___ext__interrupt_Pin;
+//  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+//  GPIO_InitStruct.Pull = GPIO_NOPULL;
+//  HAL_GPIO_Init(Button___ext__interrupt_GPIO_Port, &GPIO_InitStruct);
+//
+//  /*Configure GPIO pins : DISPLAY_CS_Pin SD_CS_Pin */
+//  GPIO_InitStruct.Pin = DISPLAY_CS_Pin|SD_CS_Pin;
+//  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+//  GPIO_InitStruct.Pull = GPIO_NOPULL;
+//  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+//  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+//
+///* USER CODE BEGIN MX_GPIO_Init_2 */
+///* USER CODE END MX_GPIO_Init_2 */
+//}
 
 /* USER CODE BEGIN 4 */
 

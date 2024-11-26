@@ -1,0 +1,6 @@
+../Sensors/hts221.c:10:9:HTS221_init	16	static
+../Sensors/hts221.c:23:6:hts221_write_byte	16	static
+../Sensors/hts221.c:27:9:hts221_read_byte	24	static
+../Sensors/hts221.c:33:6:hts221_read_array	16	static
+../Sensors/hts221.c:37:7:hts221_get_temperature	40	static
+../Sensors/hts221.c:62:7:hts221_get_humidity	40	static

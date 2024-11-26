@@ -1,0 +1,7 @@
+../Core/Src/Adafruit_GFX.c:16:6:GFX_Init	8	static
+../Core/Src/Adafruit_GFX.c:22:6:GFX_FillScreen	16	static
+../Core/Src/Adafruit_GFX.c:27:6:GFX_DrawPixel	16	static
+../Core/Src/Adafruit_GFX.c:32:6:GFX_DrawLine	40	static
+../Core/Src/Adafruit_GFX.c:48:6:GFX_SetCursor	16	static
+../Core/Src/Adafruit_GFX.c:54:6:GFX_SetTextColor	16	static
+../Core/Src/Adafruit_GFX.c:59:6:GFX_Print	32	static

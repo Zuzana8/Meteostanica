@@ -1,0 +1,4 @@
+../Sensors/lps25hb.c:12:9:LPS25HB_init	16	static
+../Sensors/lps25hb.c:42:9:lps25hb_read_byte	24	static
+../Sensors/lps25hb.c:48:6:lps25hb_write_byte	16	static
+../Sensors/lps25hb.c:53:7:lps25hb_get_pressure	16	static
