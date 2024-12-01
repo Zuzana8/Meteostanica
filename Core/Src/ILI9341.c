@@ -120,7 +120,7 @@ void ILI9341_FillScreen(uint16_t color) {
 
 // Vykreslenie znaku
 void ILI9341_DrawChar(int16_t x, int16_t y, char c, uint16_t color, uint16_t bg, uint8_t size) {
-    uint8_t *fontData = font[c - 32];
+   const  uint8_t *fontData = font[c - 32];
     for (int8_t i = 0; i < 5; i++) {
         uint8_t line = fontData[i];
         for (int8_t j = 0; j < 8; j++) {

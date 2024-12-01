@@ -4,7 +4,7 @@
  *  Created on: Nov 26, 2024
  *      Author: prezentacie
  */
-
+#include <stdlib.h>
 #include "Adafruit_GFX.h"
 #include "ILI9341.h" // Ovládač pre váš TFT displej
 

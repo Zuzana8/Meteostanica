@@ -4,11 +4,12 @@
  *  Created on: Nov 26, 2024
  *      Author: prezentacie
  */
+#include <stdint.h>
 
 #ifndef ADAFRUIT_GFX_H_
 #define ADAFRUIT_GFX_H_
 
-#include <stdint.h>
+
 
 // Základné funkcie
 void GFX_Init(void); // Inicializácia knižnice
