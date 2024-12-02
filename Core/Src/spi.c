@@ -9,6 +9,9 @@
 #include "stm32f3xx_hal_spi.h"
 #include "main.h"
 
+
+extern SPI_HandleTypeDef hspi1;
+
 SPI_HandleTypeDef hspi1;
 
 void MX_SPI1_Init(void)

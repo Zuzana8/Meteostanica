@@ -5,11 +5,12 @@
  *      Author: prezentacie
  */
 
-
+#include "stm32f3xx_hal.h"
 #include "ILI9341.h"
 #include "spi.h"
 #include "gpio.h"
 #include "fonts.h" // Definícia fontu (bitmapové údaje znakov)
+
 
 #define ILI9341_WIDTH  240
 #define ILI9341_HEIGHT 320

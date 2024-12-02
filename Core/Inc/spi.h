@@ -5,8 +5,12 @@
  *      Author: prezentacie
  */
 
-#ifndef INC_SPI_H_
-#define INC_SPI_H_
+//#ifndef INC_SPI_H_
+//#define INC_SPI_H_
+
+#ifndef __SPI_H
+#define __SPI_H
+
 
 #include "stm32f3xx_hal.h"
 

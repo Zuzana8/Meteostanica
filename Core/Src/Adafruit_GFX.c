@@ -4,9 +4,11 @@
  *  Created on: Nov 26, 2024
  *      Author: prezentacie
  */
+#include "stm32f3xx_hal.h"
 #include <stdlib.h>
 #include "Adafruit_GFX.h"
 #include "ILI9341.h" // Ovládač pre váš TFT displej
+
 
 // Premenné pre kurzor a farbu textu
 static int16_t cursor_x = 0, cursor_y = 0;

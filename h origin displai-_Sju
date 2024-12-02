@@ -1,0 +1,19 @@
+[33mcd2dfd4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdisplai-_Sju[m[33m, [m[1;31morigin/displai-_Sju[m[33m)[m displai-_Sju
+[33m75b10fb[m[33m ([m[1;32msystem_integration[m[33m)[m displai-_Sju
+[33m701cd08[m[33m ([m[1;31morigin/sensors_meteo[m[33m, [m[1;32msensors_meteo[m[33m)[m Edited sensors, errors cleared, i2c changed to LL
+[33ma97589d[m added sensors implementation
+[33m30ca32b[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Merge pull request #1 from Zuzana8/system_integration
+[33ma2b129f[m[33m ([m[1;31morigin/system_integration[m[33m)[m Fixed pinout.
+[33m43a05f0[m Some documents added. Revised pinout - possibly needing conflict resolution.
+[33md70c604[m Merge branch 'system_integration' of https://github.com/Zuzana8/Meteostanica into system_integration
+[33m17d07d4[m Initializing project files
+[33m6a58b3a[m Update README.md
+[33mc5b2be7[m Update README.md
+[33m6713b97[m Update README.md
+[33m88668dc[m Update README.md
+[33md60f5be[m Update README.md
+[33m3109e7b[m Update README.md
+[33m96855bc[m Update README.md
+[33mc5e2a5d[m Update README.md
+[33m1203bc3[m Update README.md
+[33m4882ad1[m Initial commit
