@@ -20,7 +20,7 @@ typedef enum TREND_TYPE{
     FALLING = 2
 } TREND_TYPE;
 
-float set_elevation(float e);
+void set_elevation(float e);
 
 float zambretti_get_zero_pressure(float pressure, float temmperature);
 

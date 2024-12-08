@@ -6,10 +6,10 @@
  */
 
 float zero_pressure = 0;
-float old_pressure = 0;
+float old_pressure = 1013.25; //standart pressure at sea level
 float elevation = ELEVATION_BA;
 
-float set_elevation(float e) {
+void set_elevation(float e) {
 	elevation = e;
 }
 
@@ -23,7 +23,7 @@ TREND_TYPE count_pressure_trend(float past, float now){
 	float delta = now - past;
 	if (delta > 1.6) {
 		return RISING;
-	} else if (delta < 1.6) {
+	} else if (delta < -1.6) {
 		return FALLING;
 	} else {
 		return STEADY;
@@ -96,7 +96,10 @@ void zambretti_get_text(uint8_t zNumber, char *text) {
 }
 
 void zambretti(float pressure, float temperature, char* text) {
-	zambretti_get_zero_pressure;
+	if (text == NULL) {
+	        return; // Ensure text pointer is valid
+	}
+	zero_pressure = zambretti_get_zero_pressure(pressure, temperature);
 	TREND_TYPE trend = count_pressure_trend(old_pressure, zero_pressure);
 	uint8_t z = zambretti_count_zNumber(zero_pressure, trend);
 	zambretti_get_text(z, text);
