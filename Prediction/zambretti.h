@@ -12,7 +12,7 @@
 #include <string.h>
 #include <math.h>
 
-uint8_t ELEVATION_BA = 140;
+#define ELEVATION_BA 140;
 
 typedef enum TREND_TYPE{
     STEADY = 0,

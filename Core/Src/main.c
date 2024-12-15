@@ -25,6 +25,9 @@
 #include "lps25hb.h"
 #include "hts221.h"
 #include "i2c.h"
+#include "zambretti.h"
+
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -64,6 +67,7 @@ static void MX_SPI1_Init(void);
 float temperature = 0;
 float humidity = 0;
 float pressure = 0;
+char z_text[50];
 /* USER CODE END 0 */
 
 /**
@@ -114,6 +118,11 @@ int main(void)
 	  float temp = hts221_get_temperature();
 	  float hum = hts221_get_humidity();
 	  float press = lps25hb_get_pressure();
+	  zambretti(press, temp, z_text);
+	  char text[50];
+	  strcpy(text, z_text);
+
+	  LL_mDelay(1000);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

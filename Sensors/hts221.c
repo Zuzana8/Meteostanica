@@ -6,6 +6,9 @@
  */
 #include "hts221.h"
 
+
+float h0_rh = 0.0;
+float h1_rh = 0.0;
 //initialisation of sensor
 uint8_t HTS221_init() {
 	uint8_t val = hts221_read_byte(HTS221_WHO_AM_I);
@@ -73,14 +76,25 @@ float hts221_get_humidity() {
     float h0_rh = (float) h0_x2/2.0;
     float h1_rh = (float) h1_x2/2.0;
 
-    uint16_t h0_t0_out = (hts221_read_byte(H0_OUT_1) ) | (hts221_read_byte(H0_OUT_2 )<<8);
-    uint16_t h1_t0_out = (hts221_read_byte(H1_OUT_1) ) | (hts221_read_byte(H1_OUT_2)<<8);
+    //uint16_t h0_t0_out = (hts221_read_byte(H0_OUT_1) ) | (hts221_read_byte(H0_OUT_2 )<<8);
+    //uint16_t h1_t0_out = (hts221_read_byte(H1_OUT_1) ) | (hts221_read_byte(H1_OUT_2)<<8);
 
     //output value
-    uint16_t h_out = (hts221_read_byte(HTS221_HUM_OUT_L) ) | (hts221_read_byte(HTS221_HUM_OUT_H) <<8);
+    //uint16_t h_out = (hts221_read_byte(HTS221_HUM_OUT_L) ) | (hts221_read_byte(HTS221_HUM_OUT_H) <<8);
 
     //calculate humidity
-    hum = (h0_rh + ((h1_rh-h0_rh) * ((float)h_out - (float)h0_t0_out)/((float)h1_t0_out-(float)h0_t0_out)));
+    //hum = (h0_rh + ((h1_rh-h0_rh) * ((float)h_out - (float)h0_t0_out)/((float)h1_t0_out-(float)h0_t0_out)));
+
+    int16_t h0_t0_out = (int16_t)((hts221_read_byte(H0_OUT_1) << 8) | hts221_read_byte(H0_OUT_2));
+    int16_t h1_t0_out = (int16_t)((hts221_read_byte(H1_OUT_1) << 8) | hts221_read_byte(H1_OUT_2));
+    int16_t h_out = (int16_t)((hts221_read_byte(HTS221_HUM_OUT_L) << 8) | hts221_read_byte(HTS221_HUM_OUT_H));
+
+    hum = h0_rh + ((h1_rh - h0_rh) * ((float)h_out - (float)h0_t0_out) / ((float)h1_t0_out - (float)h0_t0_out));
+
+    // Saturation check: Ensure the humidity is not greater than 100%
+    if (hum > 100.0) {
+        hum = 100.0;  // Cap it at 100% if it exceeds that value
+    }
 
     return hum;
 }

@@ -35,5 +35,6 @@
 "./Middlewares/Third_Party/FatFs/src/ff.o"
 "./Middlewares/Third_Party/FatFs/src/ff_gen_drv.o"
 "./Middlewares/Third_Party/FatFs/src/option/syscall.o"
+"./Prediction/zambretti.o"
 "./Sensors/hts221.o"
 "./Sensors/lps25hb.o"
