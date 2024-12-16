@@ -33,8 +33,8 @@
 #define T1_OUT_1 0x3E
 #define T1_OUT_2 0x3F
 
-#define H0_rH_x2 0x32
-#define H1_rH_x2 0x33
+#define H0_rH_x2 0x30
+#define H1_rH_x2 0x31
 
 #define H0_OUT_1 0x36
 #define H0_OUT_2 0x37
