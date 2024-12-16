@@ -111,7 +111,11 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  temperature = hts221_get_temperature();
+//	  temperature = hts221_get_temperature();
+//	  humidity = hts221_get_humidity();
+//	  pressure = lps25hb_get_pressure();
+
+	  HTS221_get_temperature(&temperature);
 	  humidity = hts221_get_humidity();
 	  pressure = lps25hb_get_pressure();
     /* USER CODE BEGIN 3 */
