@@ -119,6 +119,7 @@ int main(void)
 	  float hum = hts221_get_humidity();
 	  float press = lps25hb_get_pressure();
 	  zambretti(press, temp, z_text);
+	  //calculate prediction
 	  char text[50];
 	  strcpy(text, z_text);
 
