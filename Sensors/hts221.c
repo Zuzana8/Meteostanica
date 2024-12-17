@@ -22,7 +22,6 @@ uint8_t HTS221_init() {
 		hts221_write_byte(HTS221_CTRL_REG1, ctrl_reg1);
 
 		hts221_get_temperature_calibration();
-		hts221_get_humidity_calibration();
 		return 1;
 	}
 	return 0;
@@ -44,12 +43,8 @@ void HTS221_read_bytes(uint8_t reg_addr, uint8_t* values, size_t length) {
     // Added a delay or a check for 'end_of_read_flag' to ensure data has been read before proceeding
 }
 
-void hts221_read_array(uint8_t *val, uint8_t reg_addr, uint8_t len) {
-	i2c_master_read(val, len, reg_addr, HTS221_I2C_ADDRESS);
-}
-
 void hts221_get_temperature_calibration() {
-    uint8_t calibration_data[4]; // Buffer to hold T0/T1 calibration values
+    uint8_t calibration_data[4]; // Buffer to calibration values
     uint8_t t_out_data[4]; // Buffer to hold T0_OUT/T1_OUT calibration values
     int16_t t0_out, t1_out;
     uint16_t t0_degC, t1_degC;
@@ -90,53 +85,29 @@ float hts221_get_temperature() {
     return temp;
 }
 
-void hts221_get_humidity_calibration() {
-	uint8_t calibration_data[4]; // Buffer to hold T0/T1 calibration values
-	uint8_t h0_out_data[2]; // Buffer to hold T0_OUT/T1_OUT calibration values
-	uint8_t h1_out_data[2];
-	int16_t h0_out, h1_out;
-	uint16_t h0_rh, h1_rh;
-
-	//calibration registers
-	HTS221_read_bytes(H0_rH_x2 | 0x80, calibration_data, 4);
-
-	h0_rh =  calibration_data[0]>>1;
-	h1_rh =  calibration_data[1]>>1;
-
-	// Read T0_OUT and T1_OUT together with auto-increment
-	HTS221_read_bytes(H0_OUT_1 | 0x80, h0_out_data, 2);
-	HTS221_read_bytes(H1_OUT_1 | 0x80, h1_out_data, 2);
-
-	h0_out = (int16_t)(h0_out_data[1] << 8 | h0_out_data[0]);
-	h1_out = (int16_t)(h1_out_data[1] << 8 | h1_out_data[0]);
-
-	// Calculate the temperature calibration slope and intercept using the calibration values
-	HTS221_HumiditySlope = (h1_rh - h0_rh) / (8.0 * h1_out - h0_out);
-	HTS221_HumidityZero = (h0_rh / 8.0) - HTS221_HumiditySlope * h0_out;
-	LL_mDelay(100);
-}
-
 float hts221_get_humidity() {
 
-	float hum;
+	uint8_t buffer[2];
+	float   hum;
 
-	//calibration registers
-    uint8_t h0_x2 = hts221_read_byte(H0_rH_x2);
-    uint8_t h1_x2 = hts221_read_byte(H1_rH_x2);
+	HTS221_read_bytes(H0_rH_x2 | 0x80, buffer, 2);
+	int16_t h0_rh = buffer[0] >> 1;
+	int16_t h1_rh = buffer[1] >> 1;
 
-    float h0_rh = (float) h0_x2/2.0;
-    float h1_rh = (float) h1_x2/2.0;
+	HTS221_read_bytes(H0_OUT_1 | 0x80, buffer, 2);
+	int16_t h0_t0_out = (((uint16_t)buffer[1]) << 8) | (uint16_t)buffer[0];
 
-    uint16_t h0_t0_out = (hts221_read_byte(H0_OUT_1) ) | (hts221_read_byte(H0_OUT_2 )<<8);
-    uint16_t h1_t0_out = (hts221_read_byte(H1_OUT_1) ) | (hts221_read_byte(H1_OUT_2)<<8);
+	HTS221_read_bytes(H1_OUT_1 | 0x80, buffer, 2);
+	int16_t h1_t0_out = (((uint16_t)buffer[1]) << 8) | (uint16_t)buffer[0];
 
-    //output value
-    uint16_t h_out = (hts221_read_byte(HTS221_HUM_OUT_L) ) | (hts221_read_byte(HTS221_HUM_OUT_H) <<8);
+	HTS221_read_bytes(HTS221_HUM_OUT_L | 0x80, buffer, 2);
+	int16_t h_out = (((uint16_t)buffer[1]) << 8) | (uint16_t)buffer[0];
 
-    //calculate humidity
-    hum = (h0_rh + ((h1_rh-h0_rh) * ((float)h_out - (float)h0_t0_out)/((float)h1_t0_out-(float)h0_t0_out)));
-    if (hum > 100.0) {
-        hum = 100.0;
-    }
-    return hum;
+	//hum = (float)(H_T_out - H0_T0_out) * (float)(H1_rh - H0_rh) / (float)(H1_T0_out - H0_T0_out)  +  H0_rh;
+	hum = (float) (h0_rh + ((h1_rh-h0_rh) * ((float)h_out - (float)h0_t0_out)/((float)h1_t0_out-(float)h0_t0_out)));
+
+	if (hum > 100.0) {
+	   hum = 100.0;
+	}
+	return hum;
 }
