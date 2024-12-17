@@ -175,19 +175,21 @@ int main(void) {
 	//Be a tidy kiwi - don't forget to close your file!
 	f_close(&fil);
 
+
+
 	//Now let's try and write a file "write.txt"
-	fres = f_open(&fil, "write.txt",
-	FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+	fres = f_open(&fil, "write.txt", FA_READ | FA_WRITE);
 	if (fres == FR_OK) {
 		myprintf("I was able to open 'write.txt' for writing\r\n");
 	} else {
 		myprintf("f_open error (%i)\r\n", fres);
 	}
-
+	int len = f_size(&fil);
 	//Copy in a string
-	strncpy((char*) readBuf, "a new file is made!", 19);
+	strncpy((char*) readBuf, "a new file is cccb!\r\n", 21);
 	UINT bytesWrote;
-	fres = f_write(&fil, readBuf, 19, &bytesWrote);
+	f_lseek(&fil, len);
+	fres = f_write(&fil, readBuf, 21, &bytesWrote);
 	if (fres == FR_OK) {
 		myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
 	} else {
@@ -196,6 +198,7 @@ int main(void) {
 
 	//Be a tidy kiwi - don't forget to close your file!
 	f_close(&fil);
+
 
 	//We're done, so de-mount the drive
 	f_mount(NULL, "", 0);
