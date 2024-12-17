@@ -22,6 +22,9 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
+#define SD_SPI_HANDLE hspi1
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif

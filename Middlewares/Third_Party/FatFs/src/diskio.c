@@ -140,7 +140,6 @@ DRESULT disk_ioctl (
 )
 {
   DRESULT res;
-
   res = disk.drv[pdrv]->disk_ioctl(disk.lun[pdrv], cmd, buff);
   return res;
 }
