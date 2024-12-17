@@ -115,7 +115,7 @@ int main(void) {
 	MX_FATFS_Init();
 	MX_USART1_UART_Init();
 	/* USER CODE BEGIN 2 */
-	myprintf("\r\n~ SD card demo by kiwih ~\r\n\r\n");
+	myprintf("\r\n~ SD card demo by kiwih\r\n\r\n");
 
 	HAL_Delay(1000); //a short delay is important to let the SD card settle
 
