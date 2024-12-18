@@ -54,7 +54,8 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 void myprintf(const char *fmt, ...);
 int* citajData();
-void zapisData(BYTE readBuf[30], int len1);
+void zapisData(BYTE readBuf[100], int len1, float temperature,
+		float humidity, float pressure);
 
 /* USER CODE END PV */
 
@@ -104,7 +105,7 @@ int* citajData() {
 		myprintf("f_gets error (%i)\r\n", fres);
 	}
 
-	//Be a tidy kiwi - don't forget to close your file!
+	// Close file
 	f_close(&fil);
 
 
@@ -112,32 +113,78 @@ int* citajData() {
 	return pole;
 }
 
-void zapisData(BYTE readBuf[30], int len1) {
+
+// Funkcia na zapisovanie teploty, vlhkosti a tlaku do suboru
+void zapisData(BYTE readBuf[100], int len1, float temperature,
+								float humidity, float pressure) {
 	FIL fil; 		//File handle
 	FRESULT fres; //Result after operations
-	//BYTE readBuf[30];
 
-	fres = f_open(&fil, "write.txt", FA_READ | FA_WRITE);
+	fres = f_open(&fil, "hodnoty.txt", FA_READ | FA_WRITE | FA_OPEN_ALWAYS);
 	if (fres == FR_OK) {
-		myprintf("I was able to open 'write.txt' for writing\r\n");
+		myprintf("I was able to open 'hodnoty.txt' for writing\r\n");
 	} else {
 		myprintf("f_open error (%i)\r\n", fres);
 	}
 	int len = f_size(&fil);
-	//Copy in a string
-	//strncpy((char*) readBuf, "this is ANOTHER line!\r\n", 23);
 	UINT bytesWrote;
+
+//	f_lseek(&fil, len);
+//	fres = f_write(&fil, readBuf, len1, &bytesWrote);
+//	if (fres == FR_OK) {
+//		myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
+//	} else {
+//		myprintf("f_write error (%i)\r\n", fres);
+//	}
+
+	BYTE readBuf1[40];
+	for(int i = 0; i < sizeof(readBuf1); i++) {
+		readBuf1[i] = '\0';
+	}
+	char data[40];
+	for(int i = 0; i < sizeof(data); i++) {
+		data[i] = '\0';
+	}
+
+	char temp[7];
+	gcvt(temperature, 6, temp);
+	char press[10];
+	gcvt(pressure, 7, press);
+	char hum[10];
+	gcvt(humidity, 5, hum);
+	strcat(data, temp);
+	strcat(data, ";");
+	strcat(data, press);
+	strcat(data, ";");
+	strcat(data, hum);
+	strcat(data, ";\r\n");
+
+	int sizeOfData = 0;
+	for(int i = 0; i < sizeof(readBuf1); i++) {
+		if (data[i] == '\0'){
+			sizeOfData = i;
+			break;
+		}
+	}
+
+	strncpy((char*) readBuf1, data, sizeOfData);
+
+	len = f_size(&fil);
 	f_lseek(&fil, len);
-	fres = f_write(&fil, readBuf, len1, &bytesWrote);
+	fres = f_write(&fil, readBuf1, sizeOfData, &bytesWrote);
 	if (fres == FR_OK) {
-		myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
+		myprintf("Wrote %i bytes to 'hodnoty.txt'!\r\n", bytesWrote);
 	} else {
 		myprintf("f_write error (%i)\r\n", fres);
 	}
 
-	//Be a tidy kiwi - don't forget to close your file!
+	// Close file
 	f_close(&fil);
 }
+
+float temperature = 1.2;
+float humidity = 58.76;
+float pressure = 1234.56;
 
 /* USER CODE END 0 */
 
@@ -209,15 +256,21 @@ int main(void) {
 			total_sectors / 2, free_sectors / 2);
 	// -----------------------------------------------------------
 
-	BYTE readBuf[30];
-	strncpy((char*) readBuf, "this is yet again new line!\r\n", 28);
-	int len1 = sizeof(readBuf)-2;
+	BYTE readBuf[100];
+	for(int i = 0; i < sizeof(readBuf); i++) {
+		readBuf[i] = '\0';
+	}
+	char arr[] = "hello is it me youre looking for?\r\n";
+	int size = sizeof(arr)-1;
+	strncpy((char*) readBuf, arr, size);
+	int len1 = size;
 
 	// WORKING WITH SD CARD
-	citajData();
-	zapisData(readBuf, len1);
+	//citajData();
 
-	//We're done, so de-mount the drive
+	//zapisData(readBuf, len1, temperature, humidity, pressure);
+
+	// De-mount the drive
 	f_mount(NULL, "", 0);
 
 	/* USER CODE END 2 */
