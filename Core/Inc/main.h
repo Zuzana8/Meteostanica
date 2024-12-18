@@ -7,12 +7,13 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2024 STMicroelectronics.
-  * All rights reserved.
+  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
+  * All rights reserved.</center></h2>
   *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
   *
   ******************************************************************************
   */
@@ -29,17 +30,21 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx_hal.h"
 
-#include "stm32f3xx_ll_i2c.h"
+#include "stm32f3xx_ll_spi.h"
+#include "stm32f3xx_ll_system.h"
+#include "stm32f3xx_ll_gpio.h"
+#include "stm32f3xx_ll_exti.h"
 #include "stm32f3xx_ll_bus.h"
 #include "stm32f3xx_ll_cortex.h"
 #include "stm32f3xx_ll_rcc.h"
-#include "stm32f3xx_ll_system.h"
 #include "stm32f3xx_ll_utils.h"
 #include "stm32f3xx_ll_pwr.h"
-#include "stm32f3xx_ll_gpio.h"
 #include "stm32f3xx_ll_dma.h"
-
-#include "stm32f3xx_ll_exti.h"
+#include "stm32f3xx_ll_i2c.h"
+#include "stm32f3xx_ll_bus.h"
+#include "stm32f3xx_ll_rcc.h"
+#include "stm32f3xx_ll_utils.h"
+#include "stm32f3xx_ll_dma.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -69,15 +74,19 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define Button___ext__interrupt_Pin GPIO_PIN_3
-#define Button___ext__interrupt_GPIO_Port GPIOA
-#define DISPLAY_CS_Pin GPIO_PIN_4
+#define BUTTON_Pin LL_GPIO_PIN_3
+#define BUTTON_GPIO_Port GPIOA
+#define DISPLAY_CS_Pin LL_GPIO_PIN_4
 #define DISPLAY_CS_GPIO_Port GPIOA
-#define SD_CS_Pin GPIO_PIN_8
+#define DC_DISPAY_Pin LL_GPIO_PIN_0
+#define DC_DISPAY_GPIO_Port GPIOB
+#define RESET_Pin LL_GPIO_PIN_1
+#define RESET_GPIO_Port GPIOB
+#define SD_CS_Pin LL_GPIO_PIN_8
 #define SD_CS_GPIO_Port GPIOA
-#define SWDIO_Pin GPIO_PIN_13
+#define SWDIO_Pin LL_GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
-#define SWCLK_Pin GPIO_PIN_14
+#define SWCLK_Pin LL_GPIO_PIN_14
 #define SWCLK_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
