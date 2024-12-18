@@ -40,6 +40,11 @@ extern "C" {
 #include "stm32f3xx_ll_utils.h"
 #include "stm32f3xx_ll_pwr.h"
 #include "stm32f3xx_ll_dma.h"
+#include "stm32f3xx_ll_i2c.h"
+#include "stm32f3xx_ll_bus.h"
+#include "stm32f3xx_ll_rcc.h"
+#include "stm32f3xx_ll_utils.h"
+#include "stm32f3xx_ll_dma.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -85,6 +90,7 @@ void Error_Handler(void);
 #define SWCLK_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
+#define SD_SPI_HANDLE hspi1
 
 /* USER CODE END Private defines */
 
