@@ -45,9 +45,14 @@
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
+
 RTC_HandleTypeDef hrtc;
+
 SPI_HandleTypeDef hspi1;
 DMA_HandleTypeDef hdma_spi1_tx;
+
+TIM_HandleTypeDef htim2;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -62,6 +67,7 @@ static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_RTC_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 void UART_Receive(uint8_t *data, uint16_t size);
 void myprintf(const char *fmt, ...);
@@ -69,7 +75,7 @@ void Set_RTC_Time(void);
 void Set_RTC_Date(void);
 void Set_RTC_Alarm(void);
 void process_SD_card();
-
+void printTime();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -112,104 +118,28 @@ int main(void)
   MX_FATFS_Init();
   MX_RTC_Init();
   MX_USART2_UART_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  HAL_Delay(1000); //a short delay is important to let the SD card settle
-
-	//some variables for FatFs
-	FATFS FatFs; 	//Fatfs handle
-	FIL fil; 		//File handle
-	FRESULT fres; //Result after operations
-
-	//Open the file system
-//	fres = f_mount(&FatFs, "", 1); //1=mount now
-//	if (fres != FR_OK) {
-//		printf("f_mount error (%i)\r\n", fres);
-//		while (1);
-//	}
-
-	//Let's get some statistics from the SD card
-//	DWORD free_clusters, free_sectors, total_sectors;
-//
-//	FATFS *getFreeFs;
-//
-//	fres = f_getfree("", &free_clusters, &getFreeFs);
-//	if (fres != FR_OK) {
-//		printf("f_getfree error (%i)\r\n", fres);
-//		while (1)
-//			;
-//	}
-//
-//	//Formula comes from ChaN's documentation
-//	total_sectors = (getFreeFs->n_fatent - 2) * getFreeFs->csize;
-//	free_sectors = free_clusters * getFreeFs->csize;
-//
-//	printf(
-//			"SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n",
-//			total_sectors / 2, free_sectors / 2);
-//
-//	//Now let's try to open file "test.txt"
-//	fres = f_open(&fil, "test.txt", FA_READ);
-//	if (fres != FR_OK) {
-//		printf("f_open error (%i)\r\n", fres);
-//		while (1)
-//			;
-//	}
-//	printf("I was able to open 'test.txt' for reading!\r\n");
-//
-//	//Read 30 bytes from "test.txt" on the SD card
-//	BYTE readBuf[30];
-//
-//	//We can either use f_read OR f_gets to get data out of files
-//	//f_gets is a wrapper on f_read that does some string formatting for us
-//	TCHAR *rres = f_gets((TCHAR*) readBuf, 30, &fil);
-//	if (rres != 0) {
-//		printf("Read string from 'test.txt' contents: %s\r\n", readBuf);
-//	} else {
-//		printf("f_gets error (%i)\r\n", fres);
-//	}
-//
-//	//Be a tidy kiwi - don't forget to close your file!
-//	f_close(&fil);
-//
-//	//Now let's try and write a file "write.txt"
-//	fres = f_open(&fil, "write.txt",
-//	FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
-//	if (fres == FR_OK) {
-//		printf("I was able to open 'write.txt' for writing\r\n");
-//	} else {
-//		printf("f_open error (%i)\r\n", fres);
-//	}
-//
-//	//Copy in a string
-//	strncpy((char*) readBuf, "a new file is made!", 19);
-//	UINT bytesWrote;
-//	fres = f_write(&fil, readBuf, 19, &bytesWrote);
-//	if (fres == FR_OK) {
-//		printf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
-//	} else {
-//		printf("f_write error (%i)\r\n", fres);
-//	}
-//
-//	//Be a tidy kiwi - don't forget to close your file!
-//	f_close(&fil);
-
-	//We're done, so de-mount the drive
-//	f_mount(NULL, "", 0);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
     Set_RTC_Time();
-    Set_RTC_Time();
+    Set_RTC_Date();
+//    HAL_TIM_Base_Start(&htim2);
+    HAL_TIM_Base_Start_IT(&htim2);
+//	HAL_RTC_EnableAlarm(&hrtc, RTC_ALARM_TYPE_ALARM_A);
 	RTC_TimeTypeDef sTime;
 	RTC_DateTypeDef sDate;
+	char buffer[50];
+	HAL_RTC_GetTime(&hrtc, &sTime,RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+//	sprintf(buffer,"Current Time: %02d:%02d:%02d and date is: %02d-%02d-20%02d \n\r",sTime.Hours, sTime.Minutes, sTime.Seconds, sDate.Date, sDate.Month, sDate.Year);
+//    HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), HAL_MAX_DELAY);
+
 	while (1) {
-		char buffer[50];
-		HAL_RTC_GetTime(&hrtc, &sTime,RTC_FORMAT_BIN);
-		HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
-		sprintf(buffer,"Current Time: %02d:%02d:%02d \n and date is: %02d-%02d-20%02d \n",sTime.Hours, sTime.Minutes, sTime.Seconds, sDate.Date, sDate.Month, sDate.Year);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -414,6 +344,51 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 1;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 2399999999;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -429,7 +404,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 38400;
+  huart2.Init.BaudRate = 9600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -503,33 +478,60 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 //TIMER FUNCTIONS
-void UART_Receive(uint8_t *buffer, uint16_t size)
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    // Ensure the buffer is null-terminated
-	//uint16_t size = max_input_size+1;
-    HAL_UART_Receive(&huart2, buffer, size, HAL_MAX_DELAY);
-    buffer[size] = '\0';
+  if (htim == &htim2 )
+  {
+	  printTime();
+  }
 }
+void printTime(){
+	RTC_TimeTypeDef sTime;
+	RTC_DateTypeDef sDate;
+	char buffer[50];
+	HAL_RTC_GetTime(&hrtc, &sTime,RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+	sprintf(buffer,"Current Time: %02d:%02d:%02d and date is: %02d-%02d-20%02d \n\r\t",sTime.Hours, sTime.Minutes, sTime.Seconds, sDate.Date, sDate.Month, sDate.Year);
+	HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), HAL_MAX_DELAY);
+
+}
+
+void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc) {
+
+	char buffer[50];
+	sprintf(buffer,"I AM THE ALARM YOUARE LOOKING FOR");
+    HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), HAL_MAX_DELAY);
+
+}
+
 
 void Set_RTC_Time(void)
 {
 
     RTC_TimeTypeDef sTime = {0};
     uint8_t buffer[3];
+    uint8_t i = 0;
 
     HAL_UART_Transmit(&huart2, (uint8_t*)"Enter Hours (00-23): ", 21, HAL_MAX_DELAY);
-    UART_Receive(buffer, 2);
+    UART_Receive(buffer, sizeof(buffer));
 
-    sTime.Hours = (buffer[0] - '0') * 10 + (buffer[1] - '0');
+    while (buffer[i] == '\n' || buffer[i] == '\r') {
+        i++;
+    }
 
+    sTime.Hours = (buffer[i] - '0') * 10 + (buffer[i+1] - '0');
+
+    i=0;
     HAL_UART_Transmit(&huart2,
     		(uint8_t*)"\n\rEnter Minutes (00-59): ", 24, HAL_MAX_DELAY);
-    UART_Receive(buffer, 2);
-    sTime.Minutes = (buffer[0] - '0') * 10 + (buffer[1] - '0');
+    UART_Receive(buffer, sizeof(buffer));
+    sTime.Minutes = (buffer[i] - '0') * 10 + (buffer[i+1] - '0');
 
+    i=0;
     HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rEnter Seconds (00-59): \n\r", 24, HAL_MAX_DELAY);
-    UART_Receive(buffer, 2);
-    sTime.Seconds = (buffer[0] - '0') * 10 + (buffer[1] - '0');
+    UART_Receive(buffer, sizeof(buffer));
+    sTime.Seconds = (buffer[i] - '0') * 10 + (buffer[i + 1] - '0');
 
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
@@ -545,22 +547,27 @@ void Set_RTC_Date(void)
 {
     RTC_DateTypeDef sDate = {0};
     uint8_t buffer[3];
+    int i=0;
 
     HAL_UART_Transmit(&huart2, (uint8_t*)"Enter Year (00-99): ", 20, HAL_MAX_DELAY);
-    UART_Receive(buffer, 2);
+    UART_Receive(buffer, sizeof(buffer));
     sDate.Year = (buffer[0] - '0') * 10 + (buffer[1] - '0');
 
     HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rEnter Month (01-12): ", 22, HAL_MAX_DELAY);
-    UART_Receive(buffer, 2);
+    UART_Receive(buffer, sizeof(buffer));
     sDate.Month = (buffer[0] - '0') * 10 + (buffer[1] - '0');
 
     HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rEnter Date (01-31): ", 21, HAL_MAX_DELAY);
-    UART_Receive(buffer, 2);
+    UART_Receive(buffer, sizeof(buffer));
     sDate.Date = (buffer[0] - '0') * 10 + (buffer[1] - '0');
 
+    while (buffer[i] == '\n' || buffer[i] == '\r') {
+        i++;
+    }
     HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rEnter Weekday (1=Mon, 7=Sun): ", 33, HAL_MAX_DELAY);
     UART_Receive(buffer, 1);
-    sDate.WeekDay = buffer[0] - '0';
+
+    sDate.WeekDay = buffer[i] - '0';
 
     if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
     {
@@ -570,6 +577,13 @@ void Set_RTC_Date(void)
 
 }
 
+void UART_Receive(uint8_t *buffer, uint16_t size)
+{
+    // Ensure the buffer is null-terminated
+	//uint16_t size = max_input_size+1;
+    HAL_UART_Receive(&huart2, buffer, size, HAL_MAX_DELAY);
+    buffer[size] = '\0';
+}
 
 
 //SD CARD FUNCTIONS
