@@ -250,8 +250,7 @@ int main(void)
 	}
 
 	//Let's get some statistics from the SD card
-	DWORD free_clusters, free_sectors, total_sectors;
-
+	DWORD free_clusters;
 	FATFS *getFreeFs;
 
 	fres = f_getfree("", &free_clusters, &getFreeFs);
@@ -259,36 +258,10 @@ int main(void)
 		printf("f_getfree error (%i)\r\n", fres);
 		while (1);
 	}
-
-	//Formula comes from ChaN's documentation
-	total_sectors = (getFreeFs->n_fatent - 2) * getFreeFs->csize;
-	free_sectors = free_clusters * getFreeFs->csize;
-
-	printf(
-			"SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n",
-			total_sectors / 2, free_sectors / 2);
 	// -----------------------------------------------------------
-
-	BYTE readBuf[100];
-	for(int i = 0; i < sizeof(readBuf); i++) {
-		readBuf[i] = '\0';
-	}
-
 	// WORKING WITH SD CARD
 	citajData();
-//	for (int i = 0; i < 3000; i++){
-//		temperature += 0.5;
-//		humidity += 0.5;
-//		pressure += 0.5;
-//		if (humidity > 100){
-//			humidity = 40.4;
-//		}
-//		if (temperature > 100) {
-//			temperature = 20.43;
-//		}
-//		zapisData(temperature, humidity, pressure);
-//	}
-
+	zapisData(temperature, humidity, pressure);
 
   /* USER CODE END 2 */
 
@@ -297,8 +270,6 @@ int main(void)
 	while (1) {
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
-		//citajData();
-		HAL_Delay(1000);
 	}
 	// De-mount the drive
 	f_mount(NULL, "", 0);
