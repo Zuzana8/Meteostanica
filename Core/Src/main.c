@@ -45,13 +45,10 @@
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
-
 RTC_HandleTypeDef hrtc;
-
 SPI_HandleTypeDef hspi1;
 DMA_HandleTypeDef hdma_spi1_tx;
-
-UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 const uint16_t max_input_size=2;
@@ -63,8 +60,8 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
-static void MX_USART1_UART_Init(void);
 static void MX_RTC_Init(void);
+static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void UART_Receive(uint8_t *data, uint16_t size);
 void myprintf(const char *fmt, ...);
@@ -113,8 +110,8 @@ int main(void)
   MX_I2C1_Init();
   MX_SPI1_Init();
   MX_FATFS_Init();
-  MX_USART1_UART_Init();
   MX_RTC_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_Delay(1000); //a short delay is important to let the SD card settle
 
@@ -124,11 +121,11 @@ int main(void)
 	FRESULT fres; //Result after operations
 
 	//Open the file system
-	fres = f_mount(&FatFs, "", 1); //1=mount now
-	if (fres != FR_OK) {
-		printf("f_mount error (%i)\r\n", fres);
-		while (1);
-	}
+//	fres = f_mount(&FatFs, "", 1); //1=mount now
+//	if (fres != FR_OK) {
+//		printf("f_mount error (%i)\r\n", fres);
+//		while (1);
+//	}
 
 	//Let's get some statistics from the SD card
 //	DWORD free_clusters, free_sectors, total_sectors;
@@ -197,7 +194,7 @@ int main(void)
 //	f_close(&fil);
 
 	//We're done, so de-mount the drive
-	f_mount(NULL, "", 0);
+//	f_mount(NULL, "", 0);
 
   /* USER CODE END 2 */
 
@@ -256,9 +253,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1
-                              |RCC_PERIPHCLK_RTC;
-  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_RTC;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
   PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
@@ -419,37 +414,37 @@ static void MX_SPI1_Init(void)
 }
 
 /**
-  * @brief USART1 Initialization Function
+  * @brief USART2 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART1_UART_Init(void)
+static void MX_USART2_UART_Init(void)
 {
 
-  /* USER CODE BEGIN USART1_Init 0 */
+  /* USER CODE BEGIN USART2_Init 0 */
 
-  /* USER CODE END USART1_Init 0 */
+  /* USER CODE END USART2_Init 0 */
 
-  /* USER CODE BEGIN USART1_Init 1 */
+  /* USER CODE BEGIN USART2_Init 1 */
 
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 38400;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 38400;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART1_Init 2 */
+  /* USER CODE BEGIN USART2_Init 2 */
 
-  /* USER CODE END USART1_Init 2 */
+  /* USER CODE END USART2_Init 2 */
 
 }
 
@@ -512,7 +507,7 @@ void UART_Receive(uint8_t *buffer, uint16_t size)
 {
     // Ensure the buffer is null-terminated
 	//uint16_t size = max_input_size+1;
-    HAL_UART_Receive(&huart1, buffer, size, HAL_MAX_DELAY);
+    HAL_UART_Receive(&huart2, buffer, size, HAL_MAX_DELAY);
     buffer[size] = '\0';
 }
 
@@ -522,18 +517,17 @@ void Set_RTC_Time(void)
     RTC_TimeTypeDef sTime = {0};
     uint8_t buffer[3];
 
-    HAL_UART_Transmit(&huart1, (uint8_t*)"Enter Hours (00-23): ", 21, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"Enter Hours (00-23): ", 21, HAL_MAX_DELAY);
     UART_Receive(buffer, 2);
 
+    sTime.Hours = (buffer[0] - '0') * 10 + (buffer[1] - '0');
 
-  sTime.Hours = (buffer[0] - '0') * 10 + (buffer[1] - '0');
-
-    HAL_UART_Transmit(&huart1,
+    HAL_UART_Transmit(&huart2,
     		(uint8_t*)"\n\rEnter Minutes (00-59): ", 24, HAL_MAX_DELAY);
     UART_Receive(buffer, 2);
     sTime.Minutes = (buffer[0] - '0') * 10 + (buffer[1] - '0');
 
-    HAL_UART_Transmit(&huart1, (uint8_t*)"\n\rEnter Seconds (00-59): \n\r", 24, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rEnter Seconds (00-59): \n\r", 24, HAL_MAX_DELAY);
     UART_Receive(buffer, 2);
     sTime.Seconds = (buffer[0] - '0') * 10 + (buffer[1] - '0');
 
@@ -544,7 +538,7 @@ void Set_RTC_Time(void)
     {
         Error_Handler();
     }
-    HAL_UART_Transmit(&huart1, (uint8_t*)"\n\rTime is set!\n\r ", 16, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rTime is set!\n\r ", 16, HAL_MAX_DELAY);
 }
 
 void Set_RTC_Date(void)
@@ -552,19 +546,19 @@ void Set_RTC_Date(void)
     RTC_DateTypeDef sDate = {0};
     uint8_t buffer[3];
 
-    HAL_UART_Transmit(&huart1, (uint8_t*)"Enter Year (00-99): ", 20, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"Enter Year (00-99): ", 20, HAL_MAX_DELAY);
     UART_Receive(buffer, 2);
     sDate.Year = (buffer[0] - '0') * 10 + (buffer[1] - '0');
 
-    HAL_UART_Transmit(&huart1, (uint8_t*)"\n\rEnter Month (01-12): ", 22, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rEnter Month (01-12): ", 22, HAL_MAX_DELAY);
     UART_Receive(buffer, 2);
     sDate.Month = (buffer[0] - '0') * 10 + (buffer[1] - '0');
 
-    HAL_UART_Transmit(&huart1, (uint8_t*)"\n\rEnter Date (01-31): ", 21, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rEnter Date (01-31): ", 21, HAL_MAX_DELAY);
     UART_Receive(buffer, 2);
     sDate.Date = (buffer[0] - '0') * 10 + (buffer[1] - '0');
 
-    HAL_UART_Transmit(&huart1, (uint8_t*)"\n\rEnter Weekday (1=Mon, 7=Sun): ", 33, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rEnter Weekday (1=Mon, 7=Sun): ", 33, HAL_MAX_DELAY);
     UART_Receive(buffer, 1);
     sDate.WeekDay = buffer[0] - '0';
 
@@ -572,7 +566,7 @@ void Set_RTC_Date(void)
     {
         Error_Handler();
     }
-    HAL_UART_Transmit(&huart1, (uint8_t*)"\n\rDate is set!\n\r ", 16, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\n\rDate is set!\n\r ", 16, HAL_MAX_DELAY);
 
 }
 
@@ -664,7 +658,7 @@ void myprintf(const char *fmt, ...) {
 	va_end(args);
 
 	int len = strlen(buffer);
-	HAL_UART_Transmit(&huart1, (uint8_t*) buffer, len, -1);
+	HAL_UART_Transmit(&huart2, (uint8_t*) buffer, len, -1);
 }
 
 
