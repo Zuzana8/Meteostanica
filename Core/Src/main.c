@@ -53,6 +53,9 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 void myprintf(const char *fmt, ...);
+int* citajData();
+void zapisData(BYTE readBuf[30], int len1);
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -77,6 +80,63 @@ void myprintf(const char *fmt, ...) {
 
 	int len = strlen(buffer);
 	HAL_UART_Transmit(&huart1, (uint8_t*) buffer, len, -1);
+}
+
+// Funkcia na citanie dat zo subora
+int* citajData() {
+	FIL fil; 		//File handle
+	FRESULT fres; //Result after operations
+	fres = f_open(&fil, "test.txt", FA_READ);
+	if (fres != FR_OK) {
+		myprintf("f_open error (%i)\r\n", fres);
+		while (1)
+			;
+	}
+	//Read 30 bytes from "test.txt" on the SD card
+	BYTE readBuf[30];
+
+	//We can either use f_read OR f_gets to get data out of files
+	//f_gets is a wrapper on f_read that does some string formatting for us
+	TCHAR *rres = f_gets((TCHAR*) readBuf, 30, &fil);
+	if (rres != 0) {
+		myprintf("Read string from 'test.txt' contents: %s\r\n", readBuf);
+	} else {
+		myprintf("f_gets error (%i)\r\n", fres);
+	}
+
+	//Be a tidy kiwi - don't forget to close your file!
+	f_close(&fil);
+
+
+	static int pole[3];
+	return pole;
+}
+
+void zapisData(BYTE readBuf[30], int len1) {
+	FIL fil; 		//File handle
+	FRESULT fres; //Result after operations
+	//BYTE readBuf[30];
+
+	fres = f_open(&fil, "write.txt", FA_READ | FA_WRITE);
+	if (fres == FR_OK) {
+		myprintf("I was able to open 'write.txt' for writing\r\n");
+	} else {
+		myprintf("f_open error (%i)\r\n", fres);
+	}
+	int len = f_size(&fil);
+	//Copy in a string
+	//strncpy((char*) readBuf, "this is ANOTHER line!\r\n", 23);
+	UINT bytesWrote;
+	f_lseek(&fil, len);
+	fres = f_write(&fil, readBuf, len1, &bytesWrote);
+	if (fres == FR_OK) {
+		myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
+	} else {
+		myprintf("f_write error (%i)\r\n", fres);
+	}
+
+	//Be a tidy kiwi - don't forget to close your file!
+	f_close(&fil);
 }
 
 /* USER CODE END 0 */
@@ -115,15 +175,13 @@ int main(void) {
 	MX_FATFS_Init();
 	MX_USART1_UART_Init();
 	/* USER CODE BEGIN 2 */
-	myprintf("\r\n~ SD card demo by kiwih\r\n\r\n");
-
 	HAL_Delay(1000); //a short delay is important to let the SD card settle
 
 	//some variables for FatFs
 	FATFS FatFs; 	//Fatfs handle
-	FIL fil; 		//File handle
 	FRESULT fres; //Result after operations
 
+	// MOUNT SD CARD -----------------------------------------
 	//Open the file system
 	fres = f_mount(&FatFs, "", 1); //1=mount now
 	if (fres != FR_OK) {
@@ -139,8 +197,7 @@ int main(void) {
 	fres = f_getfree("", &free_clusters, &getFreeFs);
 	if (fres != FR_OK) {
 		myprintf("f_getfree error (%i)\r\n", fres);
-		while (1)
-			;
+		while (1);
 	}
 
 	//Formula comes from ChaN's documentation
@@ -150,55 +207,15 @@ int main(void) {
 	myprintf(
 			"SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n",
 			total_sectors / 2, free_sectors / 2);
+	// -----------------------------------------------------------
 
-	//Now let's try to open file "test.txt"
-	fres = f_open(&fil, "test.txt", FA_READ);
-	if (fres != FR_OK) {
-		myprintf("f_open error (%i)\r\n", fres);
-		while (1)
-			;
-	}
-	myprintf("I was able to open 'test.txt' for reading!\r\n");
-
-	//Read 30 bytes from "test.txt" on the SD card
 	BYTE readBuf[30];
+	strncpy((char*) readBuf, "this is yet again new line!\r\n", 28);
+	int len1 = sizeof(readBuf)-2;
 
-	//We can either use f_read OR f_gets to get data out of files
-	//f_gets is a wrapper on f_read that does some string formatting for us
-	TCHAR *rres = f_gets((TCHAR*) readBuf, 30, &fil);
-	if (rres != 0) {
-		myprintf("Read string from 'test.txt' contents: %s\r\n", readBuf);
-	} else {
-		myprintf("f_gets error (%i)\r\n", fres);
-	}
-
-	//Be a tidy kiwi - don't forget to close your file!
-	f_close(&fil);
-
-
-
-	//Now let's try and write a file "write.txt"
-	fres = f_open(&fil, "write.txt", FA_READ | FA_WRITE);
-	if (fres == FR_OK) {
-		myprintf("I was able to open 'write.txt' for writing\r\n");
-	} else {
-		myprintf("f_open error (%i)\r\n", fres);
-	}
-	int len = f_size(&fil);
-	//Copy in a string
-	strncpy((char*) readBuf, "a new file is cccb!\r\n", 21);
-	UINT bytesWrote;
-	f_lseek(&fil, len);
-	fres = f_write(&fil, readBuf, 21, &bytesWrote);
-	if (fres == FR_OK) {
-		myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
-	} else {
-		myprintf("f_write error (%i)\r\n", fres);
-	}
-
-	//Be a tidy kiwi - don't forget to close your file!
-	f_close(&fil);
-
+	// WORKING WITH SD CARD
+	citajData();
+	zapisData(readBuf, len1);
 
 	//We're done, so de-mount the drive
 	f_mount(NULL, "", 0);
@@ -423,80 +440,6 @@ static void MX_GPIO_Init(void) {
 }
 
 /* USER CODE BEGIN 4 */
-void process_SD_card( void )
-{
-  FATFS       FatFs;                //Fatfs handle
-  FIL         fil;                  //File handle
-  FRESULT     fres;                 //Result after operations
-  char        buf[100];
-
-  do
-  {
-    //Mount the SD Card
-    fres = f_mount(&FatFs, "", 1);    //1=mount now
-    if (fres != FR_OK)
-    {
-      printf("No SD Card found : (%i)\r\n", fres);
-      break;
-    }
-    printf("SD Card Mounted Successfully!!!\r\n");
-
-    //Read the SD Card Total size and Free Size
-    FATFS *pfs;
-    DWORD fre_clust;
-    uint32_t totalSpace, freeSpace;
-
-    f_getfree("", &fre_clust, &pfs);
-    totalSpace = (uint32_t)((pfs->n_fatent - 2) * pfs->csize * 0.5);
-    freeSpace = (uint32_t)(fre_clust * pfs->csize * 0.5);
-
-    printf("TotalSpace : %lu bytes, FreeSpace = %lu bytes\n", totalSpace, freeSpace);
-
-    //Open the file
-    fres = f_open(&fil, "EmbeTronicX.txt", FA_WRITE | FA_READ | FA_CREATE_ALWAYS);
-    if(fres != FR_OK)
-    {
-      printf("File creation/open Error : (%i)\r\n", fres);
-      break;
-    }
-
-    printf("Writing data!!!\r\n");
-    //write the data
-    f_puts("Welcome to EmbeTronicX", &fil);
-
-    //close your file
-    f_close(&fil);
-
-    //Open the file
-    fres = f_open(&fil, "EmbeTronicX.txt", FA_READ);
-    if(fres != FR_OK)
-    {
-      printf("File opening Error : (%i)\r\n", fres);
-      break;
-    }
-
-    //read the data
-    f_gets(buf, sizeof(buf), &fil);
-
-    printf("Read Data : %s\n", buf);
-
-    //close your file
-    f_close(&fil);
-    printf("Closing File!!!\r\n");
-#if 0
-    //Delete the file.
-    fres = f_unlink(EmbeTronicX.txt);
-    if (fres != FR_OK)
-    {
-      printf("Cannot able to delete the file\n");
-    }
-#endif
-  } while( false );
-
-  //We're done, so de-mount the drive
-  f_mount(NULL, "", 0);
-  printf("SD Card Unmounted Successfully!!!\r\n");
-}
 
 /* USER CODE END 4 */
 
