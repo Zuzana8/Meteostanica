@@ -54,7 +54,7 @@ DMA_HandleTypeDef hdma_spi1_tx;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-void myprintf(const char *fmt, ...);
+const uint16_t max_input_size=2;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -66,21 +66,17 @@ static void MX_SPI1_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_RTC_Init(void);
 /* USER CODE BEGIN PFP */
+void UART_Receive(uint8_t *data, uint16_t size);
+void myprintf(const char *fmt, ...);
+void Set_RTC_Time(void);
+void Set_RTC_Date(void);
+void Set_RTC_Alarm(void);
+void process_SD_card();
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void myprintf(const char *fmt, ...) {
-	static char buffer[256];
-	va_list args;
-	va_start(args, fmt);
-	vsnprintf(buffer, sizeof(buffer), fmt, args);
-	va_end(args);
-
-	int len = strlen(buffer);
-	HAL_UART_Transmit(&huart1, (uint8_t*) buffer, len, -1);
-}
 
 /* USER CODE END 0 */
 
@@ -135,70 +131,70 @@ int main(void)
 	}
 
 	//Let's get some statistics from the SD card
-	DWORD free_clusters, free_sectors, total_sectors;
-
-	FATFS *getFreeFs;
-
-	fres = f_getfree("", &free_clusters, &getFreeFs);
-	if (fres != FR_OK) {
-		printf("f_getfree error (%i)\r\n", fres);
-		while (1)
-			;
-	}
-
-	//Formula comes from ChaN's documentation
-	total_sectors = (getFreeFs->n_fatent - 2) * getFreeFs->csize;
-	free_sectors = free_clusters * getFreeFs->csize;
-
-	printf(
-			"SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n",
-			total_sectors / 2, free_sectors / 2);
-
-	//Now let's try to open file "test.txt"
-	fres = f_open(&fil, "test.txt", FA_READ);
-	if (fres != FR_OK) {
-		printf("f_open error (%i)\r\n", fres);
-		while (1)
-			;
-	}
-	printf("I was able to open 'test.txt' for reading!\r\n");
-
-	//Read 30 bytes from "test.txt" on the SD card
-	BYTE readBuf[30];
-
-	//We can either use f_read OR f_gets to get data out of files
-	//f_gets is a wrapper on f_read that does some string formatting for us
-	TCHAR *rres = f_gets((TCHAR*) readBuf, 30, &fil);
-	if (rres != 0) {
-		printf("Read string from 'test.txt' contents: %s\r\n", readBuf);
-	} else {
-		printf("f_gets error (%i)\r\n", fres);
-	}
-
-	//Be a tidy kiwi - don't forget to close your file!
-	f_close(&fil);
-
-	//Now let's try and write a file "write.txt"
-	fres = f_open(&fil, "write.txt",
-	FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
-	if (fres == FR_OK) {
-		printf("I was able to open 'write.txt' for writing\r\n");
-	} else {
-		printf("f_open error (%i)\r\n", fres);
-	}
-
-	//Copy in a string
-	strncpy((char*) readBuf, "a new file is made!", 19);
-	UINT bytesWrote;
-	fres = f_write(&fil, readBuf, 19, &bytesWrote);
-	if (fres == FR_OK) {
-		printf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
-	} else {
-		printf("f_write error (%i)\r\n", fres);
-	}
-
-	//Be a tidy kiwi - don't forget to close your file!
-	f_close(&fil);
+//	DWORD free_clusters, free_sectors, total_sectors;
+//
+//	FATFS *getFreeFs;
+//
+//	fres = f_getfree("", &free_clusters, &getFreeFs);
+//	if (fres != FR_OK) {
+//		printf("f_getfree error (%i)\r\n", fres);
+//		while (1)
+//			;
+//	}
+//
+//	//Formula comes from ChaN's documentation
+//	total_sectors = (getFreeFs->n_fatent - 2) * getFreeFs->csize;
+//	free_sectors = free_clusters * getFreeFs->csize;
+//
+//	printf(
+//			"SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n",
+//			total_sectors / 2, free_sectors / 2);
+//
+//	//Now let's try to open file "test.txt"
+//	fres = f_open(&fil, "test.txt", FA_READ);
+//	if (fres != FR_OK) {
+//		printf("f_open error (%i)\r\n", fres);
+//		while (1)
+//			;
+//	}
+//	printf("I was able to open 'test.txt' for reading!\r\n");
+//
+//	//Read 30 bytes from "test.txt" on the SD card
+//	BYTE readBuf[30];
+//
+//	//We can either use f_read OR f_gets to get data out of files
+//	//f_gets is a wrapper on f_read that does some string formatting for us
+//	TCHAR *rres = f_gets((TCHAR*) readBuf, 30, &fil);
+//	if (rres != 0) {
+//		printf("Read string from 'test.txt' contents: %s\r\n", readBuf);
+//	} else {
+//		printf("f_gets error (%i)\r\n", fres);
+//	}
+//
+//	//Be a tidy kiwi - don't forget to close your file!
+//	f_close(&fil);
+//
+//	//Now let's try and write a file "write.txt"
+//	fres = f_open(&fil, "write.txt",
+//	FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+//	if (fres == FR_OK) {
+//		printf("I was able to open 'write.txt' for writing\r\n");
+//	} else {
+//		printf("f_open error (%i)\r\n", fres);
+//	}
+//
+//	//Copy in a string
+//	strncpy((char*) readBuf, "a new file is made!", 19);
+//	UINT bytesWrote;
+//	fres = f_write(&fil, readBuf, 19, &bytesWrote);
+//	if (fres == FR_OK) {
+//		printf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
+//	} else {
+//		printf("f_write error (%i)\r\n", fres);
+//	}
+//
+//	//Be a tidy kiwi - don't forget to close your file!
+//	f_close(&fil);
 
 	//We're done, so de-mount the drive
 	f_mount(NULL, "", 0);
@@ -207,6 +203,9 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+    Set_RTC_Time();
+    Set_RTC_Time();
 	RTC_TimeTypeDef sTime;
 	RTC_DateTypeDef sDate;
 	while (1) {
@@ -330,7 +329,6 @@ static void MX_RTC_Init(void)
 
   RTC_TimeTypeDef sTime = {0};
   RTC_DateTypeDef sDate = {0};
-  RTC_AlarmTypeDef sAlarm = {0};
 
   /* USER CODE BEGIN RTC_Init 1 */
 
@@ -365,30 +363,12 @@ static void MX_RTC_Init(void)
   {
     Error_Handler();
   }
-  sDate.WeekDay = RTC_WEEKDAY_TUESDAY;
-  sDate.Month = RTC_MONTH_DECEMBER;
-  sDate.Date = 0x17;
-  sDate.Year = 0x24;
+  sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+  sDate.Month = RTC_MONTH_JANUARY;
+  sDate.Date = 0x1;
+  sDate.Year = 0x0;
 
   if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Enable the Alarm A
-  */
-  sAlarm.AlarmTime.Hours = 0x0;
-  sAlarm.AlarmTime.Minutes = 0x0;
-  sAlarm.AlarmTime.Seconds = 0x0;
-  sAlarm.AlarmTime.SubSeconds = 0x0;
-  sAlarm.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-  sAlarm.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
-  sAlarm.AlarmMask = RTC_ALARMMASK_NONE;
-  sAlarm.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
-  sAlarm.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
-  sAlarm.AlarmDateWeekDay = 0x1;
-  sAlarm.Alarm = RTC_ALARM_A;
-  if (HAL_RTC_SetAlarm(&hrtc, &sAlarm, RTC_FORMAT_BCD) != HAL_OK)
   {
     Error_Handler();
   }
@@ -526,6 +506,79 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+//TIMER FUNCTIONS
+void UART_Receive(uint8_t *buffer, uint16_t size)
+{
+    // Ensure the buffer is null-terminated
+	//uint16_t size = max_input_size+1;
+    HAL_UART_Receive(&huart1, buffer, size, HAL_MAX_DELAY);
+    buffer[size] = '\0';
+}
+
+void Set_RTC_Time(void)
+{
+
+    RTC_TimeTypeDef sTime = {0};
+    uint8_t buffer[3];
+
+    HAL_UART_Transmit(&huart1, (uint8_t*)"Enter Hours (00-23): ", 21, HAL_MAX_DELAY);
+    UART_Receive(buffer, 2);
+
+
+  sTime.Hours = (buffer[0] - '0') * 10 + (buffer[1] - '0');
+
+    HAL_UART_Transmit(&huart1,
+    		(uint8_t*)"\n\rEnter Minutes (00-59): ", 24, HAL_MAX_DELAY);
+    UART_Receive(buffer, 2);
+    sTime.Minutes = (buffer[0] - '0') * 10 + (buffer[1] - '0');
+
+    HAL_UART_Transmit(&huart1, (uint8_t*)"\n\rEnter Seconds (00-59): \n\r", 24, HAL_MAX_DELAY);
+    UART_Receive(buffer, 2);
+    sTime.Seconds = (buffer[0] - '0') * 10 + (buffer[1] - '0');
+
+    sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+    sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+
+    if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    HAL_UART_Transmit(&huart1, (uint8_t*)"\n\rTime is set!\n\r ", 16, HAL_MAX_DELAY);
+}
+
+void Set_RTC_Date(void)
+{
+    RTC_DateTypeDef sDate = {0};
+    uint8_t buffer[3];
+
+    HAL_UART_Transmit(&huart1, (uint8_t*)"Enter Year (00-99): ", 20, HAL_MAX_DELAY);
+    UART_Receive(buffer, 2);
+    sDate.Year = (buffer[0] - '0') * 10 + (buffer[1] - '0');
+
+    HAL_UART_Transmit(&huart1, (uint8_t*)"\n\rEnter Month (01-12): ", 22, HAL_MAX_DELAY);
+    UART_Receive(buffer, 2);
+    sDate.Month = (buffer[0] - '0') * 10 + (buffer[1] - '0');
+
+    HAL_UART_Transmit(&huart1, (uint8_t*)"\n\rEnter Date (01-31): ", 21, HAL_MAX_DELAY);
+    UART_Receive(buffer, 2);
+    sDate.Date = (buffer[0] - '0') * 10 + (buffer[1] - '0');
+
+    HAL_UART_Transmit(&huart1, (uint8_t*)"\n\rEnter Weekday (1=Mon, 7=Sun): ", 33, HAL_MAX_DELAY);
+    UART_Receive(buffer, 1);
+    sDate.WeekDay = buffer[0] - '0';
+
+    if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    HAL_UART_Transmit(&huart1, (uint8_t*)"\n\rDate is set!\n\r ", 16, HAL_MAX_DELAY);
+
+}
+
+
+
+//SD CARD FUNCTIONS
 void process_SD_card( void )
 {
   FATFS       FatFs;                //Fatfs handle
@@ -586,6 +639,7 @@ void process_SD_card( void )
     //close your file
     f_close(&fil);
     printf("Closing File!!!\r\n");
+
 #if 0
     //Delete the file.
     fres = f_unlink(EmbeTronicX.txt);
@@ -600,6 +654,19 @@ void process_SD_card( void )
   f_mount(NULL, "", 0);
   printf("SD Card Unmounted Successfully!!!\r\n");
 }
+
+
+void myprintf(const char *fmt, ...) {
+	static char buffer[256];
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(buffer, sizeof(buffer), fmt, args);
+	va_end(args);
+
+	int len = strlen(buffer);
+	HAL_UART_Transmit(&huart1, (uint8_t*) buffer, len, -1);
+}
+
 
 /* USER CODE END 4 */
 
