@@ -66,8 +66,8 @@ all: main-build
 main-build: meteostanica.elf secondary-outputs
 
 # Tool invocations
-meteostanica.elf meteostanica.map: $(OBJS) $(USER_OBJS) C:\Users\Lenovo\Desktop\VRS\Team\Meteostanica\STM32F303K8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "meteostanica.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Lenovo\Desktop\VRS\Team\Meteostanica\STM32F303K8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="meteostanica.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+meteostanica.elf meteostanica.map: $(OBJS) $(USER_OBJS) C:\Users\szdor\Desktop\I-RK\SEM7\VRS\Semestralny\ projekt\Marika\Meteostanica\STM32F303K8TX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "meteostanica.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\szdor\Desktop\I-RK\SEM7\VRS\Semestralny projekt\Marika\Meteostanica\STM32F303K8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="meteostanica.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

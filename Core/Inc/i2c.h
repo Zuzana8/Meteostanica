@@ -1,28 +1,26 @@
-/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    i2c.h
-  * @brief   This file contains all the function prototypes for
-  *          the i2c.c file
+  * File Name          : SPI.h
+  * Description        : This file provides code for the configuration
+  *                      of the SPI instances.
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2024 STMicroelectronics.
-  * All rights reserved.
+  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
+  * All rights reserved.</center></h2>
   *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __I2C_H__
-#define __I2C_H__
-
+#ifndef __spi_H
+#define __spi_H
 #ifdef __cplusplus
-extern "C" {
+ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -36,16 +34,38 @@ extern "C" {
 
 /* USER CODE END Private defines */
 
-void MX_I2C1_Init(void);
+void MX_SPI1_Init(void);
 
+unsigned char readWriteSPI1(unsigned char txData);
+void initCS_Pin(void);
+void cs_set(void);
+void cs_reset(void);
+
+void initCD_Pin(void);
+void cd_set(void);
+void cd_reset(void);
+
+void initRES_Pin(void);
+void res_set(void);
+void res_reset(void);
+
+void device_Unselect(void);
+void device_Select(void);
 /* USER CODE BEGIN Prototypes */
-void i2c_master_write(uint8_t data, uint8_t reg_addr, uint8_t slave_addr);
-uint8_t* i2c_master_read(uint8_t* data, uint8_t length, uint8_t reg_addr, uint8_t slave_addr);
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
 }
 #endif
+#endif /*__ spi_H */
 
-#endif /* __I2C_H__ */
+/**
+  * @}
+  */
 
+/**
+  * @}
+  */
+
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

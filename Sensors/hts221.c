@@ -5,6 +5,8 @@
  *      Author: Piwkova
  */
 #include "hts221.h"
+#include "i2c.h"
+
 
 
 float HTS221_TemperatureSlope;

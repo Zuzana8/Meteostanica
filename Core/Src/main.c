@@ -17,19 +17,22 @@
   ******************************************************************************
   */
 /* USER CODE END Header */
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "spi.h"
-#include "gpio.h"
-#include "ili9163.h"
-#include "rtc.h"
-#include <time.h>
-#include <stdlib.h>
+#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "lps25hb.h"
+#include "spi.h"
+#include "hts221.h"
+#include "i2c.h"
+#include "zambretti.h"
+#include "gpio.h"
+#include "ili9163.h"
+#include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,235 +52,37 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+RTC_HandleTypeDef hrtc;
+
 /* USER CODE BEGIN PV */
+RTC_HandleTypeDef hrtc;
+DMA_HandleTypeDef hdma_spi1_tx;
+//TIM_HandleTypeDef htim2;
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-void TempHumPres(float temperature, float humidity, int pressure);
+//static void MX_GPIO_Init(void);
+static void MX_I2C1_Init(void);
+//static void MX_SPI1_Init(void);
+static void MX_RTC_Init(void);
 /* USER CODE BEGIN PFP */
+void TempHumPres(float temperature, float humidity, int pressure);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+float temperature = 0;
+float humidity = 0;
+float pressure = 0;
+char z_text[50];
 uint8_t rx_data = 0;
 uint8_t switchState = 0; // 0 = main program, 1 = graph
 float temperatureHistory[24 * 7] = {0}; // Array for 7 days of hourly temperatures
 uint8_t graphDrawn = 0;
-/* USER CODE END 0 */
 
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
-
-float getTemperature(void){
-
-	return (rand() % 21) + 10;
-}
-
-float getHumidity(void){
-
-	return (rand() % 70) + 10;
-}
-
-int getPressure(void){
-	return (rand() % 75) + 980;
-}
-
-int main(void)
-{
-	srand((unsigned int)time(NULL));
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-
-  NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
-
-  /* System interrupt init*/
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
-  SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_SPI1_Init();
-
-  initCD_Pin();
-  initCS_Pin();
-  initRES_Pin();
-
-  LL_mDelay(50);
-
-  lcdInitialise(0x48);
-  lcdClearDisplay(0xFFFF);
-
-  RTC_Init();
-//  lcdPutS("VRS 2019", lcdTextX(2), lcdTextY(1), 0x0000, 0xFFFF);
-//  lcdPutS("Cvicenie 8", lcdTextX(2), lcdTextY(4), 0x0000, 0xFFFF);
-//  lcdPutS("SPI komunikacia", lcdTextX(2), lcdTextY(5), 0x0000, 0xFFFF);
-
-
-  for (int i = 0; i < 8 * 7; i++) {
-      temperatureHistory[i] = (rand() % 21) + 10; // Random temperatures between 10 and 30 degrees
-  }
-
-  	uint8_t lastWeather = 0;
-	while (1)
-	{
-		if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_3)) {
-		    printf("Button pressed!\n");
-		}
-		//switchState = LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_1); // Replace with your switch GPIO pin
-
-		if (switchState){
-			if (!graphDrawn) {
-		    // Draw the graph
-		    drawTemperatureGraph(temperatureHistory, 8 * 7);
-		    LL_mDelay(1000); // Avoid rapid refresh of the graph
-		    graphDrawn = 1;
-			}
-		} else {
-
-
-			if (graphDrawn == 1){
-				lcdClearDisplay(decodeRgbValue(0xFF, 0xFF, 0xFF));
-				graphDrawn = 0;
-			}
-
-
-			float temperature = getTemperature();
-			float humidity = getTemperature();
-			float pressure = getPressure();
-
-			uint8_t currentWeather;
-
-			// Determine current weather based on pressure and humidity
-			if (pressure > 1013.25 && humidity < 60.0) //1013.25 je priemerny tlak vo vyske 1500m
-			{
-			// High pressure and low humidity indicate sunny weather
-			currentWeather = SUNNY_SYMBOL_INDEX;
-			}
-			else if (pressure < 1000.0 && humidity > 70.0)
-			{
-			// Low pressure and high humidity indicate rainy weather
-			currentWeather = RAINY_SYMBOL_INDEX;
-			}
-			else
-			{
-			// Otherwise, assume cloudy weather
-			currentWeather = CLOUDY_SYMBOL_INDEX;
-		}
-
-
-			if (currentWeather != lastWeather)
-				{
-					drawWeather(currentWeather);
-					lastWeather = currentWeather; // Update the last displayed weather
-				}
-
-			get_current_time();
-
-			display_time_with_large_digits();
-
-			TempHumPres(temperature, humidity, pressure);
-
-			LL_mDelay(500);
-		}
-	}
-  /* USER CODE END 3 */
-}
-
-/**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-void SystemClock_Config(void)
-{
-  LL_FLASH_SetLatency(LL_FLASH_LATENCY_0);
-
-  if(LL_FLASH_GetLatency() != LL_FLASH_LATENCY_0)
-  {
-  Error_Handler();
-  }
-  LL_RCC_HSI_Enable();
-
-   /* Wait till HSI is ready */
-  while(LL_RCC_HSI_IsReady() != 1)
-  {
-
-  }
-  LL_RCC_HSI_SetCalibTrimming(16);
-  LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
-  LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
-  LL_RCC_SetAPB2Prescaler(LL_RCC_APB1_DIV_1);
-  LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSI);
-
-   /* Wait till System clock is ready */
-  while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSI)
-  {
-
-  }
-  LL_Init1msTick(8000000);
-  LL_SYSTICK_SetClkSource(LL_SYSTICK_CLKSOURCE_HCLK);
-  LL_SetSystemCoreClock(8000000);
-}
-
-void TempHumPres(float temperature, float humidity, int pressure)
-{
-    char buffer[10];
-
-    // Display the static labels for temperature and humidity
-    lcdPutLargeS("Tem.:", 10, 90, 0x0000, 0xFFFF);       // Black text on white background
-    lcdPutLargeS("Hum.:", 170, 90, 0x0000, 0xFFFF);    // Black text on white background
-    lcdPutLargeS("Pres.:", 10, 75, 0x0000, 0xFFFF);    // Black text on white background
-
-    //dlhodobá predpoveď
-    lcdPutLargeS("Fairly Fine Showery     Later", 10, 140, 0x0000, 0xFFFF);
-
-    // Display the temperature value
-    snprintf(buffer, sizeof(buffer), "%.1f C", temperature);
-    lcdPutLargeS(buffer, 70, 90, 0x0000, 0xFFFF);   // Display temperature in large font
-
-    // Display the humidity value
-    snprintf(buffer, sizeof(buffer), "%.1f %%", humidity);
-    lcdPutLargeS(buffer, 230, 90, 0x0000, 0xFFFF);   // Display humidity in large font
-
-    // Display the humidity value
-    snprintf(buffer, sizeof(buffer), "%d hPa", pressure);
-    lcdPutLargeS(buffer, 80, 75, 0x0000, 0xFFFF);   // Display humidity in large font
-}
-
-/* USER CODE BEGIN 4 */
-
-/* USER CODE END 4 */
-
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
-void Error_Handler(void)
-{
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-
-  /* USER CODE END Error_Handler_Debug */
-}
 
 /* USER CODE BEGIN 0 */
 void EXTI3_IRQHandler(void)
@@ -293,6 +98,372 @@ void EXTI3_IRQHandler(void)
 
 /* USER CODE END 0 */
 
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_I2C1_Init();
+  MX_SPI1_Init();
+  MX_FATFS_Init();
+  MX_RTC_Init();
+  /* USER CODE BEGIN 2 */
+  initCD_Pin();
+  initCS_Pin();
+  initRES_Pin();
+  LL_mDelay(50);
+  lcdInitialise(0x48);
+  lcdClearDisplay(0xFFFF);
+  HTS221_init();
+  LPS25HB_init();
+
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+  for (int i = 0; i < 8 * 7; i++) {
+        temperatureHistory[i] = (rand() % 21) + 10; // Random temperatures between 10 and 30 degrees
+    }
+
+  uint8_t lastWeather = 0;
+  while (1)
+  {
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
+}
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_RTC;
+  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+//
+  /* USER CODE END I2C1_Init 0 */
+
+  LL_I2C_InitTypeDef I2C_InitStruct = {0};
+
+  LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+  /**I2C1 GPIO Configuration
+  PB6   ------> I2C1_SCL
+  PB7   ------> I2C1_SDA
+  */
+  GPIO_InitStruct.Pin = LL_GPIO_PIN_6|LL_GPIO_PIN_7;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+  GPIO_InitStruct.Alternate = LL_GPIO_AF_4;
+  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* Peripheral clock enable */
+  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C1);
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+//
+  /* USER CODE END I2C1_Init 1 */
+
+  /** I2C Initialization
+  */
+  LL_I2C_EnableAutoEndMode(I2C1);
+  LL_I2C_DisableOwnAddress2(I2C1);
+  LL_I2C_DisableGeneralCall(I2C1);
+  LL_I2C_EnableClockStretching(I2C1);
+  I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
+  I2C_InitStruct.Timing = 0x00201D2B;
+  I2C_InitStruct.AnalogFilter = LL_I2C_ANALOGFILTER_ENABLE;
+  I2C_InitStruct.DigitalFilter = 0;
+  I2C_InitStruct.OwnAddress1 = 0;
+  I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
+  I2C_InitStruct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
+  LL_I2C_Init(I2C1, &I2C_InitStruct);
+  LL_I2C_SetOwnAddress2(I2C1, 0, LL_I2C_OWNADDRESS2_NOMASK);
+  /* USER CODE BEGIN I2C1_Init 2 */
+//
+  /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
+
+  /* USER CODE BEGIN RTC_Init 0 */
+
+  /* USER CODE END RTC_Init 0 */
+
+  RTC_TimeTypeDef sTime = {0};
+  RTC_DateTypeDef sDate = {0};
+
+  /* USER CODE BEGIN RTC_Init 1 */
+
+  /* USER CODE END RTC_Init 1 */
+
+  /** Initialize RTC Only
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 249;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* USER CODE BEGIN Check_RTC_BKUP */
+
+  /* USER CODE END Check_RTC_BKUP */
+
+  /** Initialize RTC and set the Time and Date
+  */
+  sTime.Hours = 0x8;
+  sTime.Minutes = 0x0;
+  sTime.Seconds = 0x0;
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sDate.WeekDay = RTC_WEEKDAY_THURSDAY;
+  sDate.Month = RTC_MONTH_DECEMBER;
+  sDate.Date = 0x20;
+  sDate.Year = 0x24;
+
+  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RTC_Init 2 */
+
+  /* USER CODE END RTC_Init 2 */
+
+}
+
+/**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+//static void MX_SPI1_Init(void)
+//{
+//
+//  /* USER CODE BEGIN SPI1_Init 0 */
+//
+//  /* USER CODE END SPI1_Init 0 */
+//
+//  LL_SPI_InitTypeDef SPI_InitStruct = {0};
+//
+//  LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+//
+//  /* Peripheral clock enable */
+//  LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SPI1);
+//
+//  LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
+//  /**SPI1 GPIO Configuration
+//  PA5   ------> SPI1_SCK
+//  PA6   ------> SPI1_MISO
+//  PA7   ------> SPI1_MOSI
+//  */
+//  GPIO_InitStruct.Pin = LL_GPIO_PIN_5|LL_GPIO_PIN_6|LL_GPIO_PIN_7;
+//  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+//  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+//  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+//  GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
+//  GPIO_InitStruct.Alternate = LL_GPIO_AF_5;
+//  LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+//
+//  /* USER CODE BEGIN SPI1_Init 1 */
+//
+//  /* USER CODE END SPI1_Init 1 */
+//  /* SPI1 parameter configuration*/
+//  SPI_InitStruct.TransferDirection = LL_SPI_FULL_DUPLEX;
+//  SPI_InitStruct.Mode = LL_SPI_MODE_MASTER;
+//  SPI_InitStruct.DataWidth = LL_SPI_DATAWIDTH_8BIT;
+//  SPI_InitStruct.ClockPolarity = LL_SPI_POLARITY_LOW;
+//  SPI_InitStruct.ClockPhase = LL_SPI_PHASE_1EDGE;
+//  SPI_InitStruct.NSS = LL_SPI_NSS_SOFT;
+//  SPI_InitStruct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV4;
+//  SPI_InitStruct.BitOrder = LL_SPI_MSB_FIRST;
+//  SPI_InitStruct.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
+//  SPI_InitStruct.CRCPoly = 7;
+//  LL_SPI_Init(SPI1, &SPI_InitStruct);
+//  LL_SPI_SetStandard(SPI1, LL_SPI_PROTOCOL_MOTOROLA);
+//  LL_SPI_EnableNSSPulseMgt(SPI1);
+//  /* USER CODE BEGIN SPI1_Init 2 */
+//
+//  /* USER CODE END SPI1_Init 2 */
+//
+//}
+//
+///**
+//  * @brief GPIO Initialization Function
+//  * @param None
+//  * @retval None
+//  */
+//static void MX_GPIO_Init(void)
+//{
+//  LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+///* USER CODE BEGIN MX_GPIO_Init_1 */
+///* USER CODE END MX_GPIO_Init_1 */
+//
+//  /* GPIO Ports Clock Enable */
+//  LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOF);
+//  LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
+//  LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+//
+//  /**/
+//  LL_GPIO_ResetOutputPin(GPIOA, BUTTON_Pin|DISPLAY_CS_Pin);
+//
+//  /**/
+//  LL_GPIO_ResetOutputPin(GPIOB, DC_DISPAY_Pin|RESET_Pin);
+//
+//  /**/
+//  LL_GPIO_SetOutputPin(SD_CS_GPIO_Port, SD_CS_Pin);
+//
+//  /**/
+//  GPIO_InitStruct.Pin = BUTTON_Pin|DISPLAY_CS_Pin|SD_CS_Pin;
+//  GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
+//  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
+//  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+//  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+//  LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+//
+//  /**/
+//  GPIO_InitStruct.Pin = DC_DISPAY_Pin|RESET_Pin;
+//  GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
+//  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
+//  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+//  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+//  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//
+///* USER CODE BEGIN MX_GPIO_Init_2 */
+///* USER CODE END MX_GPIO_Init_2 */
+//}
+
+/* USER CODE BEGIN 4 */
+void TempHumPres(float temperature, float humidity, int pressure)
+{
+    char buffer[10];
+
+    // Display the static labels for temperature and humidity
+    lcdPutLargeS("Tem.:", 10, 90, 0x0000, 0xFFFF);       // Black text on white background
+    lcdPutLargeS("Hum.:", 170, 90, 0x0000, 0xFFFF);    // Black text on white background
+    lcdPutLargeS("Pres.:", 10, 75, 0x0000, 0xFFFF);    // Black text on white background
+
+    //dlhodobá predpove�?
+    lcdPutLargeS("Fairly Fine Showery     Later", 10, 140, 0x0000, 0xFFFF);
+
+    // Display the temperature value
+    snprintf(buffer, sizeof(buffer), "%.1f C", temperature);
+    lcdPutLargeS(buffer, 70, 90, 0x0000, 0xFFFF);   // Display temperature in large font
+
+    // Display the humidity value
+    snprintf(buffer, sizeof(buffer), "%.1f %%", humidity);
+    lcdPutLargeS(buffer, 230, 90, 0x0000, 0xFFFF);   // Display humidity in large font
+
+    // Display the humidity value
+    snprintf(buffer, sizeof(buffer), "%d hPa", pressure);
+    lcdPutLargeS(buffer, 80, 75, 0x0000, 0xFFFF);   // Display humidity in large font
+}
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+
+  /* USER CODE END Error_Handler_Debug */
+}
 
 #ifdef  USE_FULL_ASSERT
 /**
@@ -302,7 +473,7 @@ void EXTI3_IRQHandler(void)
   * @param  line: assert_param error line source number
   * @retval None
   */
-void assert_failed(char *file, uint32_t line)
+void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
@@ -310,5 +481,3 @@ void assert_failed(char *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
